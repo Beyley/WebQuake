@@ -469,7 +469,7 @@ WEBS.ServerOnRequest = function(request)
 			continue;
 		if (request.remoteAddress !== s.address)
 			continue;
-		NET.Close(s);
+		// NET.Close(s); This disconnects players that are on the same network (no idea why thats a thing)
 		break;
 	}
 	WEBS.acceptsockets.push(request.accept('quake', request.origin));
