@@ -3,14 +3,12 @@ Datagram = {};
 Datagram.sockets = [];
 Datagram.acceptsockets = [];
 
-Datagram.Init = function()
-{
+Datagram.Init = function () {
 	if (COM.CheckParm('-noudp') != null)
 		return;
 
 	var i, newsocket;
-	for (i = 0; i < SV.svs.maxclientslimit; ++i)
-	{
+	for (i = 0; i < SV.svs.maxclientslimit; ++i) {
 		newsocket = Node.dgram.createSocket('udp4');
 		Datagram.sockets[i] = newsocket;
 		newsocket.bind();
@@ -19,11 +17,9 @@ Datagram.Init = function()
 	}
 
 	var local = Node.os.networkInterfaces(), j, k, addr;
-	for (i in local)
-	{
+	for (i in local) {
 		j = local[i];
-		for (k = 0; k < j.length; ++k)
-		{
+		for (k = 0; k < j.length; ++k) {
 			addr = j[k];
 			if ((addr.family !== 'IPv4') || (addr.internal === true))
 				continue;
@@ -39,10 +35,8 @@ Datagram.Init = function()
 	return true;
 };
 
-Datagram.Listen = function()
-{
-	if (NET.listening !== true)
-	{
+Datagram.Listen = function () {
+	if (NET.listening !== true) {
 		if (Datagram.controlsocket == null)
 			return;
 		Datagram.controlsocket.close();
@@ -50,12 +44,10 @@ Datagram.Listen = function()
 		return;
 	}
 	var controlsocket = Node.dgram.createSocket('udp4');
-	try
-	{
+	try {
 		controlsocket.bind(NET.hostport);
 	}
-	catch (e)
-	{
+	catch (e) {
 		Con.Print('Unable to bind to ' + Datagram.myAddr + ':' + NET.hostport + '\n');
 		controlsocket.close();
 		return;
@@ -64,15 +56,13 @@ Datagram.Listen = function()
 	Datagram.controlsocket = controlsocket;
 };
 
-Datagram.CheckNewConnections = function()
-{
+Datagram.CheckNewConnections = function () {
 	if (Datagram.acceptsockets.length === 0)
 		return;
 	var sock = NET.NewQSocket();
 	var address = Datagram.acceptsockets.shift();
 	var i, newsocket;
-	for (i = 0; i < Datagram.sockets.length; ++i)
-	{
+	for (i = 0; i < Datagram.sockets.length; ++i) {
 		newsocket = Datagram.sockets[i];
 		if ((newsocket.data_port != null) && (newsocket.data_socket == null))
 			break;
@@ -103,23 +93,19 @@ Datagram.CheckNewConnections = function()
 	return sock;
 };
 
-Datagram.GetMessage = function(sock)
-{
+Datagram.GetMessage = function (sock) {
 	if (sock.driverdata == null)
 		return -1;
 	if ((sock.canSend !== true) && ((NET.time - sock.lastSendTime) > 1.0))
 		Datagram.SendMessageNext(sock, true);
 	var message, length, flags, ret = 0, sequence, i;
-	for (; sock.messages.length > 0; )
-	{
+	for (; sock.messages.length > 0;) {
 		message = sock.messages.shift();
 		length = (message[2] << 8) + message[3] - 8;
 		flags = message[1];
 		sequence = message.readUInt32BE(4);
-		if ((flags & 16) !== 0)
-		{
-			if (sequence < sock.unreliableReceiveSequence)
-			{
+		if ((flags & 16) !== 0) {
+			if (sequence < sock.unreliableReceiveSequence) {
 				Con.DPrint('Got a stale datagram\n');
 				ret = 0;
 				break;
@@ -133,26 +119,21 @@ Datagram.GetMessage = function(sock)
 			ret = 2;
 			break;
 		}
-		if ((flags & 2) !== 0)
-		{
-			if (sequence !== (sock.sendSequence - 1))
-			{
+		if ((flags & 2) !== 0) {
+			if (sequence !== (sock.sendSequence - 1)) {
 				Con.DPrint('Stale ACK received\n');
 				continue;
 			}
-			if (sequence === sock.ackSequence)
-			{
+			if (sequence === sock.ackSequence) {
 				if (++sock.ackSequence !== sock.sendSequence)
 					Con.DPrint('ack sequencing error\n');
 			}
-			else
-			{
+			else {
 				Con.DPrint('Duplicate ACK received\n');
 				continue;
 			}
 			sock.sendMessageLength -= 1024;
-			if (sock.sendMessageLength > 0)
-			{
+			if (sock.sendMessageLength > 0) {
 				sock.sendMessage.copy(sock.sendMessage, 0, 1024, 1024 + sock.sendMessageLength);
 				sock.sendNext = true;
 				continue;
@@ -161,15 +142,13 @@ Datagram.GetMessage = function(sock)
 			sock.canSend = true;
 			continue;
 		}
-		if ((flags & 1) !== 0)
-		{
+		if ((flags & 1) !== 0) {
 			sock.driverdata.send(new Buffer([0, 2, 0, 8, sequence >>> 24, (sequence & 0xff0000) >>> 16, (sequence & 0xff00) >>> 8, (sequence & 0xff) >>> 0]),
 				0, 8, sock.addr[1], sock.addr[0]);
 			if (sequence !== sock.receiveSequence)
 				continue;
 			++sock.receiveSequence;
-			if ((flags & 8) === 0)
-			{
+			if ((flags & 8) === 0) {
 				message.copy(sock.receiveMessage, sock.receiveMessageLength, 8, 8 + length);
 				sock.receiveMessageLength += length;
 				continue;
@@ -190,8 +169,7 @@ Datagram.GetMessage = function(sock)
 	return ret;
 };
 
-Datagram.SendMessage = function(sock, data)
-{
+Datagram.SendMessage = function (sock, data) {
 	if (sock.driverdata == null)
 		return -1;
 	var i, src = new Uint8Array(data.data);
@@ -201,13 +179,11 @@ Datagram.SendMessage = function(sock, data)
 	var buf = new Buffer(1032);
 	buf[0] = 0;
 	var dataLen;
-	if (data.cursize <= 1024)
-	{
+	if (data.cursize <= 1024) {
 		dataLen = data.cursize;
 		buf[1] = 9;
 	}
-	else
-	{
+	else {
 		dataLen = 1024;
 		buf[1] = 1;
 	}
@@ -220,18 +196,15 @@ Datagram.SendMessage = function(sock, data)
 	return 1;
 };
 
-Datagram.SendMessageNext = function(sock, resend)
-{
+Datagram.SendMessageNext = function (sock, resend) {
 	var buf = new Buffer(1032);
 	buf[0] = 0;
 	var dataLen;
-	if (sock.sendMessageLength <= 1024)
-	{
+	if (sock.sendMessageLength <= 1024) {
 		dataLen = sock.sendMessageLength;
 		buf[1] = 9;
 	}
-	else
-	{
+	else {
 		dataLen = 1024;
 		buf[1] = 1;
 	}
@@ -246,8 +219,7 @@ Datagram.SendMessageNext = function(sock, resend)
 	sock.lastSendTime = NET.time;
 };
 
-Datagram.SendUnreliableMessage = function(sock, data)
-{
+Datagram.SendUnreliableMessage = function (sock, data) {
 	if (sock.driverdata == null)
 		return -1;
 	var buf = new Buffer(1032);
@@ -260,8 +232,7 @@ Datagram.SendUnreliableMessage = function(sock, data)
 	return 1;
 };
 
-Datagram.CanSendMessage = function(sock)
-{
+Datagram.CanSendMessage = function (sock) {
 	if (sock.driverdata == null)
 		return;
 	if (sock.sendNext === true)
@@ -269,16 +240,14 @@ Datagram.CanSendMessage = function(sock)
 	return sock.canSend;
 };
 
-Datagram.Close = function(sock)
-{
+Datagram.Close = function (sock) {
 	if (sock.driverdata == null)
 		return;
 	sock.driverdata.data_socket = null;
 	sock.driverdata = null;
 };
 
-Datagram.ControlOnMessage = function(msg, rinfo)
-{
+Datagram.ControlOnMessage = function (msg, rinfo) {
 	if (SV.server.active !== true)
 		return;
 	if (rinfo.size < 4)
@@ -292,8 +261,7 @@ Datagram.ControlOnMessage = function(msg, rinfo)
 	buf[0] = 0x80;
 	buf[1] = 0;
 
-	if (command === 2)
-	{
+	if (command === 2) {
 		if (msg.toString('ascii', 5, 11) !== 'QUAKE\0')
 			return;
 		buf[4] = 0x83;
@@ -320,14 +288,12 @@ Datagram.ControlOnMessage = function(msg, rinfo)
 
 	var i;
 
-	if (command === 3)
-	{
+	if (command === 3) {
 		var playerNumber = msg[5];
 		if (playerNumber == null)
 			return;
 		var activeNumber = -1, client;
-		for (i = 0; i < SV.svs.maxclients; ++i)
-		{
+		for (i = 0; i < SV.svs.maxclients; ++i) {
 			client = SV.svs.clients[i];
 			if (client.active !== true)
 				continue;
@@ -356,13 +322,10 @@ Datagram.ControlOnMessage = function(msg, rinfo)
 		return;
 	}
 
-	if (command === 4)
-	{
+	if (command === 4) {
 		var prevCvarName = msg.toString('ascii', 5).slice('\0')[0];
-		if (prevCvarName.length !== 0)
-		{
-			for (i = 0; i < Cvar.vars.length; ++i)
-			{
+		if (prevCvarName.length !== 0) {
+			for (i = 0; i < Cvar.vars.length; ++i) {
 				if (Cvar.vars[i].name === prevCvarName)
 					break;
 			}
@@ -373,15 +336,13 @@ Datagram.ControlOnMessage = function(msg, rinfo)
 		else
 			i = 0;
 		var v;
-		for (; i < Cvar.vars.length; ++i)
-		{
+		for (; i < Cvar.vars.length; ++i) {
 			v = Cvar.vars[i];
 			if (v.server === true)
 				break;
 		}
 		buf[4] = 0x85;
-		if (i >= Cvar.vars.length)
-		{
+		if (i >= Cvar.vars.length) {
 			buf[2] = 0;
 			buf[3] = 5;
 			Datagram.controlsocket.send(buf, 0, 5, rinfo.port, rinfo.address);
@@ -406,8 +367,7 @@ Datagram.ControlOnMessage = function(msg, rinfo)
 	if (msg.toString('ascii', 5, 11) !== 'QUAKE\0')
 		return;
 
-	if (msg[11] !== 3)
-	{
+	if (msg[11] !== 3) {
 		buf[2] = 0;
 		buf[3] = 28;
 		buf[4] = 0x82;
@@ -416,8 +376,7 @@ Datagram.ControlOnMessage = function(msg, rinfo)
 		return;
 	}
 	var s;
-	for (i = 0; i < NET.activeSockets.length; ++i)
-	{
+	for (i = 0; i < NET.activeSockets.length; ++i) {
 		s = NET.activeSockets[i];
 		if (s.disconnected === true)
 			continue;
@@ -425,8 +384,7 @@ Datagram.ControlOnMessage = function(msg, rinfo)
 			continue;
 		if (rinfo.address !== s.addr[0])
 			continue;
-		if ((rinfo.port !== s.addr[1]) || ((Sys.FloatTime() - s.connecttime) >= 2.0))
-		{
+		if ((rinfo.port !== s.addr[1]) || ((Sys.FloatTime() - s.connecttime) >= 2.0)) {
 			NET.Close(s);
 			return;
 		}
@@ -437,14 +395,12 @@ Datagram.ControlOnMessage = function(msg, rinfo)
 		Datagram.controlsocket.send(buf, 0, 9, rinfo.port, rinfo.address);
 		return;
 	}
-	for (i = 0; i < Datagram.sockets.length; ++i)
-	{
+	for (i = 0; i < Datagram.sockets.length; ++i) {
 		s = Datagram.sockets[i];
 		if ((s.data_port != null) && (s.data_socket == null))
 			break;
 	}
-	if ((i === Datagram.sockets.length) || ((NET.activeconnections + Datagram.acceptsockets.length) >= SV.svs.maxclients))
-	{
+	if ((i === Datagram.sockets.length) || ((NET.activeconnections + Datagram.acceptsockets.length) >= SV.svs.maxclients)) {
 		buf[2] = 0;
 		buf[3] = 22;
 		buf[4] = 0x82;
@@ -455,20 +411,17 @@ Datagram.ControlOnMessage = function(msg, rinfo)
 	Datagram.acceptsockets.push([rinfo.address, rinfo.port]);
 };
 
-Datagram.DgramOnError = function(e)
-{
+Datagram.DgramOnError = function (e) {
 	this.data_port = null;
 	if (this.data_socket != null)
 		NET.Close(this.data_socket);
 };
 
-Datagram.DgramOnListening = function()
-{
+Datagram.DgramOnListening = function () {
 	this.data_port = this.address().port;
 };
 
-Datagram.DgramOnMessage = function(msg, rinfo)
-{
+Datagram.DgramOnMessage = function (msg, rinfo) {
 	if (this.data_socket == null)
 		return;
 	var addr = this.data_socket.addr;

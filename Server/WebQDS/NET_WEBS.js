@@ -3,14 +3,12 @@ WEBS = {};
 WEBS.acceptsockets = [];
 WEBS.colors = [];
 
-WEBS.Init = function()
-{
+WEBS.Init = function () {
 	var palette = COM.LoadFile('gfx/palette.lmp');
 	if (palette == null)
 		Sys.Error('Couldn\'t load gfx/palette.lmp');
 	var pal = new Uint8Array(palette), i, src = 24, c;
-	for (i = 0; i <= 13; ++i)
-	{
+	for (i = 0; i <= 13; ++i) {
 		WEBS.colors[i] = pal[src].toString() + ',' + pal[src + 1].toString() + ',' + pal[src + 2].toString();
 		src += 48;
 	}
@@ -21,10 +19,8 @@ WEBS.Init = function()
 	return true;
 };
 
-WEBS.Listen = function()
-{
-	if (NET.listening !== true)
-	{
+WEBS.Listen = function () {
+	if (NET.listening !== true) {
 		WEBS.server.unmount();
 		if (WEBS.http == null)
 			return;
@@ -32,22 +28,19 @@ WEBS.Listen = function()
 		WEBS.http = null;
 		return;
 	}
-	try
-	{
+	try {
 		WEBS.http = Node.http.createServer();
 		WEBS.http.listen(NET.hostport);
 		WEBS.http.on('request', WEBS.HTTPOnRequest);
-		WEBS.server.mount({httpServer: WEBS.http, maxReceivedMessageSize: 8192});
+		WEBS.server.mount({ httpServer: WEBS.http, maxReceivedMessageSize: 8192 });
 	}
-	catch (e)
-	{
+	catch (e) {
 		NET.listening = false;
 		return;
 	}
 };
 
-WEBS.CheckNewConnections = function()
-{
+WEBS.CheckNewConnections = function () {
 	if (WEBS.acceptsockets.length === 0)
 		return;
 	var sock = NET.NewQSocket();
@@ -61,8 +54,7 @@ WEBS.CheckNewConnections = function()
 	return sock;
 };
 
-WEBS.GetMessage = function(sock)
-{
+WEBS.GetMessage = function (sock) {
 	if (sock.driverdata == null)
 		return -1;
 	if (sock.driverdata.closeReasonCode !== -1)
@@ -77,8 +69,7 @@ WEBS.GetMessage = function(sock)
 	return src[0];
 };
 
-WEBS.SendMessage = function(sock, data)
-{
+WEBS.SendMessage = function (sock, data) {
 	if (sock.driverdata == null)
 		return -1;
 	if (sock.driverdata.closeReasonCode !== -1)
@@ -92,8 +83,7 @@ WEBS.SendMessage = function(sock, data)
 	return 1;
 };
 
-WEBS.SendUnreliableMessage = function(sock, data)
-{
+WEBS.SendUnreliableMessage = function (sock, data) {
 	if (sock.driverdata == null)
 		return -1;
 	if (sock.driverdata.closeReasonCode !== -1)
@@ -107,16 +97,14 @@ WEBS.SendUnreliableMessage = function(sock, data)
 	return 1;
 };
 
-WEBS.CanSendMessage = function(sock)
-{
+WEBS.CanSendMessage = function (sock) {
 	if (sock.driverdata == null)
 		return;
 	if (sock.driverdata.closeReasonCode === -1)
 		return true;
 };
 
-WEBS.Close = function(sock)
-{
+WEBS.Close = function (sock) {
 	if (sock.driverdata == null)
 		return;
 	if (sock.driverdata.closeReasonCode !== -1)
@@ -125,8 +113,7 @@ WEBS.Close = function(sock)
 	sock.driverdata = null;
 };
 
-WEBS.ConnectionOnMessage = function(message)
-{
+WEBS.ConnectionOnMessage = function (message) {
 	if (message.type !== 'binary')
 		return;
 	if (message.binaryData.length > 8000)
@@ -134,19 +121,15 @@ WEBS.ConnectionOnMessage = function(message)
 	this.data_socket.receiveMessage.push(message.binaryData);
 };
 
-WEBS.ConnectionOnClose = function()
-{
+WEBS.ConnectionOnClose = function () {
 	NET.Close(this.data_socket);
 };
 
-WEBS.HTMLSpecialChars = function(str)
-{
+WEBS.HTMLSpecialChars = function (str) {
 	var out = [], i, c;
-	for (i = 0; i < str.length; ++i)
-	{
+	for (i = 0; i < str.length; ++i) {
 		c = str.charCodeAt(i);
-		switch (c)
-		{
+		switch (c) {
 			case 38: out[out.length] = '&amp;'; continue;
 			case 60: out[out.length] = '&lt;'; continue;
 			case 62: out[out.length] = '&gt;'; continue;
@@ -156,10 +139,8 @@ WEBS.HTMLSpecialChars = function(str)
 	return out.join('');
 };
 
-WEBS.HTTPOnRequest = function(request, response)
-{
-	if (request.method === 'OPTIONS')
-	{
+WEBS.HTTPOnRequest = function (request, response) {
+	if (request.method === 'OPTIONS') {
 		response.statusCode = 200;
 		response.setHeader('Access-Control-Allow-Origin', '*');
 		response.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
@@ -168,8 +149,7 @@ WEBS.HTTPOnRequest = function(request, response)
 		return;
 	}
 	var head = request.method === 'HEAD';
-	if ((request.method !== 'GET') && (head !== true))
-	{
+	if ((request.method !== 'GET') && (head !== true)) {
 		response.statusCode = 501;
 		response.end();
 		return;
@@ -179,18 +159,15 @@ WEBS.HTTPOnRequest = function(request, response)
 	if (pathname.length >= 2)
 		path = pathname[1].toLowerCase();
 	var i, text;
-	if (path.length === 0)
-	{
-		if (SV.server.active !== true)
-		{
+	if (path.length === 0) {
+		if (SV.server.active !== true) {
 			response.statusCode = 503;
 			response.end();
 			return;
 		}
 		response.statusCode = 200;
 		response.setHeader('Content-Type', 'text/html; charset=UTF-8');
-		if (head === true)
-		{
+		if (head === true) {
 			response.end();
 			return;
 		}
@@ -198,8 +175,7 @@ WEBS.HTTPOnRequest = function(request, response)
 		response.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>');
 		response.write(hostname);
 		response.write('</title>');
-		if (Host.rcon_password.string.length !== 0)
-		{
+		if (Host.rcon_password.string.length !== 0) {
 			response.write('<script type="text/javascript">function rcon() {\n');
 			response.write('var rcon = document.getElementById(\'rcon\').value, password = document.getElementById(\'password\').value;\n');
 			response.write('if ((rcon.length === 0) || (password.length === 0)) {return;}\n');
@@ -217,8 +193,7 @@ WEBS.HTTPOnRequest = function(request, response)
 		response.write(SV.svs.maxclients.toString());
 		response.write(')</h1><table border="1"><tr><th>Name</th><th>Shirt</th><th>Pants</th><th>Frags</th><th>Time</th></tr>');
 		var client, time = Sys.FloatTime(), seconds;
-		for (i = 0; i < SV.svs.maxclients; ++i)
-		{
+		for (i = 0; i < SV.svs.maxclients; ++i) {
 			client = SV.svs.clients[i];
 			if (client.active !== true)
 				continue;
@@ -250,10 +225,8 @@ WEBS.HTTPOnRequest = function(request, response)
 		response.end('</body></html>');
 		return;
 	}
-	if (path === 'server_info')
-	{
-		if (SV.server.active !== true)
-		{
+	if (path === 'server_info') {
+		if (SV.server.active !== true) {
 			response.statusCode = 503;
 			response.end();
 			return;
@@ -262,8 +235,7 @@ WEBS.HTTPOnRequest = function(request, response)
 		response.setHeader('Content-Type', 'application/json; charset=UTF-8');
 		if (head === true)
 			response.end();
-		else
-		{
+		else {
 			response.end(JSON.stringify({
 				hostName: NET.hostname.string,
 				levelName: PR.GetString(PR.globals_int[PR.globalvars.mapname]),
@@ -274,23 +246,19 @@ WEBS.HTTPOnRequest = function(request, response)
 		}
 		return;
 	}
-	if (path === 'player_info')
-	{
-		if (SV.server.active !== true)
-		{
+	if (path === 'player_info') {
+		if (SV.server.active !== true) {
 			response.statusCode = 503;
 			response.end();
 			return;
 		}
 		var client;
-		if ((pathname.length <= 2) || (pathname[2] === ''))
-		{
+		if ((pathname.length <= 2) || (pathname[2] === '')) {
 			response.statusCode = 200;
 			response.setHeader('Content-Type', 'application/json; charset=UTF-8');
 			response.write('[');
 			text = [];
-			for (i = 0; i < SV.svs.maxclients; ++i)
-			{
+			for (i = 0; i < SV.svs.maxclients; ++i) {
 				client = SV.svs.clients[i];
 				if (client.active !== true)
 					continue;
@@ -308,24 +276,21 @@ WEBS.HTTPOnRequest = function(request, response)
 		}
 		var playerNumber = Q.atoi(pathname[2]);
 		var activeNumber = -1;
-		for (i = 0; i < SV.svs.maxclients; ++i)
-		{
+		for (i = 0; i < SV.svs.maxclients; ++i) {
 			client = SV.svs.clients[i];
 			if (client.active !== true)
 				continue;
 			if (++activeNumber === playerNumber)
 				break;
 		}
-		if (i === SV.svs.maxclients)
-		{
+		if (i === SV.svs.maxclients) {
 			response.statusCode = 404;
 			response.end();
 			return;
 		}
 		response.statusCode = 200;
 		response.setHeader('Content-Type', 'application/json; charset=UTF-8');
-		if (head === true)
-		{
+		if (head === true) {
 			response.end();
 			return;
 		}
@@ -338,16 +303,12 @@ WEBS.HTTPOnRequest = function(request, response)
 		}));
 		return;
 	}
-	if (path === 'rule_info')
-	{
+	if (path === 'rule_info') {
 		var name, v;
-		if (pathname.length >= 3)
-		{
+		if (pathname.length >= 3) {
 			name = pathname[2].toLowerCase();
-			if (name.length !== 0)
-			{
-				for (i = 0; i < Cvar.vars.length; ++i)
-				{
+			if (name.length !== 0) {
+				for (i = 0; i < Cvar.vars.length; ++i) {
 					v = Cvar.vars[i];
 					if (v.server !== true)
 						continue;
@@ -358,7 +319,7 @@ WEBS.HTTPOnRequest = function(request, response)
 					if (head === true)
 						response.end();
 					else
-						response.end(JSON.stringify({rule: v.name, value: v.string}));
+						response.end(JSON.stringify({ rule: v.name, value: v.string }));
 					return;
 				}
 				response.statusCode = 404;
@@ -368,68 +329,57 @@ WEBS.HTTPOnRequest = function(request, response)
 		}
 		response.statusCode = 200;
 		response.setHeader('Content-Type', 'application/json; charset=UTF-8');
-		if (head === true)
-		{
+		if (head === true) {
 			response.end();
 			return;
 		}
 		response.write('[');
 		text = [];
-		for (i = 0; i < Cvar.vars.length; ++i)
-		{
+		for (i = 0; i < Cvar.vars.length; ++i) {
 			v = Cvar.vars[i];
 			if (v.server === true)
-				text[text.length] = JSON.stringify({rule: v.name, value: v.string});
+				text[text.length] = JSON.stringify({ rule: v.name, value: v.string });
 		}
 		response.write(text.join(','));
 		response.end(']');
 		return;
 	}
-	if (path === 'rcon')
-	{
+	if (path === 'rcon') {
 		var data;
-		try
-		{
+		try {
 			data = decodeURIComponent(pathname.slice(2).join('/')).split('\n')[0];
 		}
-		catch (e)
-		{
+		catch (e) {
 			response.statusCode = 400;
 			response.end();
 			return;
 		}
-		if (data.length === 0)
-		{
+		if (data.length === 0) {
 			response.statusCode = 400;
 			response.end();
 			return;
 		}
-		if (request.headers.authorization == null)
-		{
+		if (request.headers.authorization == null) {
 			response.statusCode = 401;
 			response.setHeader('WWW-Authenticate', 'Basic realm="Quake"');
 			response.end();
 			return;
 		}
 		var password = request.headers.authorization;
-		if (password.substring(0, 6) !== 'Basic ')
-		{
+		if (password.substring(0, 6) !== 'Basic ') {
 			response.statusCode = 403;
 			response.end();
 			return;
 		}
-		try
-		{
+		try {
 			password = (new Buffer(password.substring(6), 'base64')).toString('ascii');
 		}
-		catch (e)
-		{
+		catch (e) {
 			response.statusCode = 403;
 			response.end();
 			return;
 		}
-		if (password.substring(0, 6) !== 'quake:')
-		{
+		if (password.substring(0, 6) !== 'quake:') {
 			response.statusCode = 403;
 			response.end();
 			return;
@@ -442,26 +392,21 @@ WEBS.HTTPOnRequest = function(request, response)
 	response.end();
 };
 
-WEBS.ServerOnRequest = function(request)
-{
-	if (SV.server.active !== true)
-	{
+WEBS.ServerOnRequest = function (request) {
+	if (SV.server.active !== true) {
 		request.reject();
 		return;
 	}
-	if (request.requestedProtocols[0] !== 'quake')
-	{
+	if (request.requestedProtocols[0] !== 'quake') {
 		request.reject();
 		return;
 	}
-	if ((NET.activeconnections + WEBS.acceptsockets.length) >= SV.svs.maxclients)
-	{
+	if ((NET.activeconnections + WEBS.acceptsockets.length) >= SV.svs.maxclients) {
 		request.reject();
 		return;
 	}
 	var i, s;
-	for (i = 0; i < NET.activeSockets.length; ++i)
-	{
+	for (i = 0; i < NET.activeSockets.length; ++i) {
 		s = NET.activeSockets[i];
 		if (s.disconnected === true)
 			continue;

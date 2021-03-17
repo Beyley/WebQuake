@@ -1,29 +1,26 @@
 Mod = {};
 
-Mod.type = {brush: 0, sprite: 1, alias: 2};
+Mod.type = { brush: 0, sprite: 1, alias: 2 };
 
-Mod.version = {brush: 29, sprite: 1};
+Mod.version = { brush: 29, sprite: 1 };
 
 Mod.known = [];
 
-Mod.Init = function()
-{
+Mod.Init = function () {
 	Mod.novis = [];
 	var i;
 	for (i = 0; i < 1024; ++i)
 		Mod.novis[i] = 0xff;
 };
 
-Mod.PointInLeaf = function(p, model)
-{
+Mod.PointInLeaf = function (p, model) {
 	if (model == null)
 		Sys.Error('Mod.PointInLeaf: bad model');
 	if (model.nodes == null)
 		Sys.Error('Mod.PointInLeaf: bad model');
 	var node = model.nodes[0];
 	var normal;
-	for (;;)
-	{
+	for (; ;) {
 		if (node.contents < 0)
 			return node;
 		normal = node.plane.normal;
@@ -34,19 +31,15 @@ Mod.PointInLeaf = function(p, model)
 	}
 };
 
-Mod.DecompressVis = function(i, model)
-{
+Mod.DecompressVis = function (i, model) {
 	var decompressed = [], c, out, row = (model.leafs.length + 7) >> 3;
-	if (model.visdata == null)
-	{
+	if (model.visdata == null) {
 		for (; row >= 0; --row)
 			decompressed[out++] = 0xff;
 		return decompressed;
 	}
-	for (out = 0; out < row; )
-	{
-		if (model.visdata[i] !== 0)
-		{
+	for (out = 0; out < row;) {
+		if (model.visdata[i] !== 0) {
 			decompressed[out++] = model.visdata[i++];
 			continue;
 		}
@@ -57,18 +50,15 @@ Mod.DecompressVis = function(i, model)
 	return decompressed;
 };
 
-Mod.LeafPVS = function(leaf, model)
-{
+Mod.LeafPVS = function (leaf, model) {
 	if (leaf === model.leafs[0])
 		return Mod.novis;
 	return Mod.DecompressVis(leaf.visofs, model);
 };
 
-Mod.ClearAll = function()
-{
+Mod.ClearAll = function () {
 	var i, mod;
-	for (i = 0; i < Mod.known.length; ++i)
-	{
+	for (i = 0; i < Mod.known.length; ++i) {
 		mod = Mod.known[i];
 		if (mod.type !== Mod.type.brush)
 			continue;
@@ -81,32 +71,27 @@ Mod.ClearAll = function()
 	}
 };
 
-Mod.FindName = function(name)
-{
+Mod.FindName = function (name) {
 	if (name.length === 0)
 		Sys.Error('Mod.FindName: NULL name');
 	var i;
-	for (i = 0; i < Mod.known.length; ++i)
-	{
+	for (i = 0; i < Mod.known.length; ++i) {
 		if (Mod.known[i] == null)
 			continue;
 		if (Mod.known[i].name === name)
 			return Mod.known[i];
 	}
-	for (i = 0; i <= Mod.known.length; ++i)
-	{
+	for (i = 0; i <= Mod.known.length; ++i) {
 		if (Mod.known[i] != null)
 			continue;
-		Mod.known[i] = {name: name, needload: true};
+		Mod.known[i] = { name: name, needload: true };
 		return Mod.known[i];
 	}
 };
 
-Mod.ClearAll = function()
-{
+Mod.ClearAll = function () {
 	var i, mod;
-	for (i = 0; i < Mod.known.length; ++i)
-	{
+	for (i = 0; i < Mod.known.length; ++i) {
 		mod = Mod.known[i];
 		if (mod.type !== Mod.type.brush)
 			continue;
@@ -117,37 +102,33 @@ Mod.ClearAll = function()
 	}
 };
 
-Mod.LoadModel = function(mod, crash)
-{
+Mod.LoadModel = function (mod, crash) {
 	if (mod.needload !== true)
 		return mod;
 	var buf = COM.LoadFile(mod.name);
-	if (buf == null)
-	{
+	if (buf == null) {
 		if (crash === true)
 			Sys.Error('Mod.LoadModel: ' + mod.name + ' not found');
 		return;
 	}
 	Mod.loadmodel = mod;
 	mod.needload = false;
-	switch ((new DataView(buf)).getUint32(0, true))
-	{
-	case 0x4f504449:
-		Mod.loadmodel.type = Mod.type.alias;
-		Mod.loadmodel.mins = [-16.0, -16.0, -16.0];
-		Mod.loadmodel.maxs = [16.0, 16.0, 16.0];
-		break;
-	case 0x50534449:
-		Mod.LoadSpriteModel(buf);
-		break;
-	default:
-		Mod.LoadBrushModel(buf);
+	switch ((new DataView(buf)).getUint32(0, true)) {
+		case 0x4f504449:
+			Mod.loadmodel.type = Mod.type.alias;
+			Mod.loadmodel.mins = [-16.0, -16.0, -16.0];
+			Mod.loadmodel.maxs = [16.0, 16.0, 16.0];
+			break;
+		case 0x50534449:
+			Mod.LoadSpriteModel(buf);
+			break;
+		default:
+			Mod.LoadBrushModel(buf);
 	}
 	return mod;
 };
 
-Mod.ForName = function(name, crash)
-{
+Mod.ForName = function (name, crash) {
 	return Mod.LoadModel(Mod.FindName(name), crash);
 };
 
@@ -179,8 +160,7 @@ Mod.contents = {
 	current_down: -14
 };
 
-Mod.LoadVisibility = function(buf)
-{
+Mod.LoadVisibility = function (buf) {
 	var view = new DataView(buf);
 	var fileofs = view.getUint32((Mod.lump.visibility << 3) + 4, true);
 	var filelen = view.getUint32((Mod.lump.visibility << 3) + 8, true);
@@ -190,16 +170,14 @@ Mod.LoadVisibility = function(buf)
 	Mod.loadmodel.visdata.set(new Uint8Array(buf, fileofs, filelen));
 };
 
-Mod.LoadEntities = function(buf)
-{
+Mod.LoadEntities = function (buf) {
 	var view = new DataView(buf);
 	var fileofs = view.getUint32((Mod.lump.entities << 3) + 4, true);
 	var filelen = view.getUint32((Mod.lump.entities << 3) + 8, true);
 	Mod.loadmodel.entities = Q.memstr(new Uint8Array(buf, fileofs, filelen));
 };
 
-Mod.LoadSubmodels = function(buf)
-{
+Mod.LoadSubmodels = function (buf) {
 	var view = new DataView(buf);
 	var fileofs = view.getUint32((Mod.lump.models << 3) + 4, true);
 	var filelen = view.getUint32((Mod.lump.models << 3) + 8, true);
@@ -209,28 +187,27 @@ Mod.LoadSubmodels = function(buf)
 	Mod.loadmodel.submodels = [];
 
 	Mod.loadmodel.mins = [view.getFloat32(fileofs, true) - 1.0,
-		view.getFloat32(fileofs + 4, true) - 1.0,
-		view.getFloat32(fileofs + 8, true) - 1.0];
+	view.getFloat32(fileofs + 4, true) - 1.0,
+	view.getFloat32(fileofs + 8, true) - 1.0];
 	Mod.loadmodel.maxs = [view.getFloat32(fileofs + 12, true) + 1.0,
-		view.getFloat32(fileofs + 16, true) + 1.0,
-		view.getFloat32(fileofs + 20, true) + 1.0];
+	view.getFloat32(fileofs + 16, true) + 1.0,
+	view.getFloat32(fileofs + 20, true) + 1.0];
 	Mod.loadmodel.hulls[0].firstclipnode = view.getUint32(fileofs + 36, true);
 	Mod.loadmodel.hulls[1].firstclipnode = view.getUint32(fileofs + 40, true);
 	Mod.loadmodel.hulls[2].firstclipnode = view.getUint32(fileofs + 44, true);
 	fileofs += 64;
 
 	var i, clipnodes = Mod.loadmodel.hulls[0].clipnodes, out;
-	for (i = 1; i < count; ++i)
-	{
+	for (i = 1; i < count; ++i) {
 		out = Mod.FindName('*' + i);
 		out.needload = false;
 		out.type = Mod.type.brush;
 		out.mins = [view.getFloat32(fileofs, true) - 1.0,
-			view.getFloat32(fileofs + 4, true) - 1.0,
-			view.getFloat32(fileofs + 8, true) - 1.0];
+		view.getFloat32(fileofs + 4, true) - 1.0,
+		view.getFloat32(fileofs + 8, true) - 1.0];
 		out.maxs = [view.getFloat32(fileofs + 12, true) + 1.0,
-			view.getFloat32(fileofs + 16, true) + 1.0,
-			view.getFloat32(fileofs + 20, true) + 1.0];
+		view.getFloat32(fileofs + 16, true) + 1.0,
+		view.getFloat32(fileofs + 20, true) + 1.0];
 		out.origin = [view.getFloat32(fileofs + 24, true), view.getFloat32(fileofs + 28, true), view.getFloat32(fileofs + 32, true)];
 		out.hulls = [
 			{
@@ -263,8 +240,7 @@ Mod.LoadSubmodels = function(buf)
 	}
 };
 
-Mod.SetParent = function(node, parent)
-{
+Mod.SetParent = function (node, parent) {
 	node.parent = parent;
 	if (node.contents < 0)
 		return;
@@ -272,8 +248,7 @@ Mod.SetParent = function(node, parent)
 	Mod.SetParent(node.children[1], node);
 };
 
-Mod.LoadNodes = function(buf)
-{
+Mod.LoadNodes = function (buf) {
 	var view = new DataView(buf);
 	var fileofs = view.getUint32((Mod.lump.nodes << 3) + 4, true);
 	var filelen = view.getUint32((Mod.lump.nodes << 3) + 8, true);
@@ -282,8 +257,7 @@ Mod.LoadNodes = function(buf)
 	var count = filelen / 24;
 	Mod.loadmodel.nodes = [];
 	var i, out;
-	for (i = 0; i < count; ++i)
-	{
+	for (i = 0; i < count; ++i) {
 		Mod.loadmodel.nodes[i] = {
 			num: i,
 			contents: 0,
@@ -294,8 +268,7 @@ Mod.LoadNodes = function(buf)
 		};
 		fileofs += 24;
 	}
-	for (i = 0; i < count; ++i)
-	{
+	for (i = 0; i < count; ++i) {
 		out = Mod.loadmodel.nodes[i];
 		out.plane = Mod.loadmodel.planes[out.planenum];
 		if (out.children[0] >= 0)
@@ -310,8 +283,7 @@ Mod.LoadNodes = function(buf)
 	Mod.SetParent(Mod.loadmodel.nodes[0]);
 };
 
-Mod.LoadLeafs = function(buf)
-{
+Mod.LoadLeafs = function (buf) {
 	var view = new DataView(buf);
 	var fileofs = view.getUint32((Mod.lump.leafs << 3) + 4, true);
 	var filelen = view.getUint32((Mod.lump.leafs << 3) + 8, true);
@@ -320,8 +292,7 @@ Mod.LoadLeafs = function(buf)
 	var count = filelen / 28;
 	Mod.loadmodel.leafs = [];
 	var i, j;
-	for (i = 0; i < count; ++i)
-	{
+	for (i = 0; i < count; ++i) {
 		Mod.loadmodel.leafs[i] = {
 			num: i,
 			contents: view.getInt32(fileofs, true),
@@ -333,8 +304,7 @@ Mod.LoadLeafs = function(buf)
 	};
 };
 
-Mod.LoadClipnodes = function(buf)
-{
+Mod.LoadClipnodes = function (buf) {
 	var view = new DataView(buf);
 	var fileofs = view.getUint32((Mod.lump.clipnodes << 3) + 4, true);
 	var filelen = view.getUint32((Mod.lump.clipnodes << 3) + 8, true);
@@ -359,8 +329,7 @@ Mod.LoadClipnodes = function(buf)
 		clip_maxs: [32.0, 32.0, 64.0]
 	};
 	var i;
-	for (i = 0; i < count; ++i)
-	{
+	for (i = 0; i < count; ++i) {
 		Mod.loadmodel.clipnodes[i] = {
 			planenum: view.getUint32(fileofs, true),
 			children: [view.getInt16(fileofs + 4, true), view.getInt16(fileofs + 6, true)]
@@ -369,8 +338,7 @@ Mod.LoadClipnodes = function(buf)
 	}
 };
 
-Mod.MakeHull0 = function()
-{
+Mod.MakeHull0 = function () {
 	var node, child, clipnodes = [], i, out;
 	var hull = {
 		clipnodes: clipnodes,
@@ -379,10 +347,9 @@ Mod.MakeHull0 = function()
 		clip_mins: [0.0, 0.0, 0.0],
 		clip_maxs: [0.0, 0.0, 0.0]
 	};
-	for (i = 0; i < Mod.loadmodel.nodes.length; ++i)
-	{
+	for (i = 0; i < Mod.loadmodel.nodes.length; ++i) {
 		node = Mod.loadmodel.nodes[i];
-		out = {planenum: node.planenum, children: []};
+		out = { planenum: node.planenum, children: [] };
 		child = node.children[0];
 		out.children[0] = child.contents < 0 ? child.contents : child.num;
 		child = node.children[1];
@@ -392,8 +359,7 @@ Mod.MakeHull0 = function()
 	Mod.loadmodel.hulls[0] = hull;
 };
 
-Mod.LoadPlanes = function(buf)
-{
+Mod.LoadPlanes = function (buf) {
 	var view = new DataView(buf);
 	var fileofs = view.getUint32((Mod.lump.planes << 3) + 4, true);
 	var filelen = view.getUint32((Mod.lump.planes << 3) + 8, true);
@@ -402,8 +368,7 @@ Mod.LoadPlanes = function(buf)
 	var count = filelen / 20;
 	Mod.loadmodel.planes = [];
 	var i, out;
-	for (i = 0; i < count; ++i)
-	{
+	for (i = 0; i < count; ++i) {
 		out = {
 			normal: [view.getFloat32(fileofs, true), view.getFloat32(fileofs + 4, true), view.getFloat32(fileofs + 8, true)],
 			dist: view.getFloat32(fileofs + 12, true),
@@ -421,8 +386,7 @@ Mod.LoadPlanes = function(buf)
 	}
 };
 
-Mod.LoadBrushModel = function(buffer)
-{
+Mod.LoadBrushModel = function (buffer) {
 	Mod.loadmodel.type = Mod.type.brush;
 	var version = (new DataView(buffer)).getUint32(0, true);
 	if (version !== Mod.version.brush)
@@ -437,8 +401,7 @@ Mod.LoadBrushModel = function(buffer)
 	Mod.LoadSubmodels(buffer);
 };
 
-Mod.LoadSpriteModel = function(buffer)
-{
+Mod.LoadSpriteModel = function (buffer) {
 	Mod.loadmodel.type = Mod.type.sprite;
 	var model = new DataView(buffer);
 	var version = model.getUint32(4, true);
@@ -450,8 +413,7 @@ Mod.LoadSpriteModel = function(buffer)
 	Mod.loadmodel.maxs = [width, width, height * 0.5];
 }
 
-Mod.Print = function()
-{
+Mod.Print = function () {
 	Con.Print('Cached models:\n');
 	var i;
 	for (i = 0; i < Mod.known.length; ++i)

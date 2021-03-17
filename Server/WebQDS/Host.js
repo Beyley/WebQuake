@@ -2,8 +2,7 @@ Host = {};
 
 Host.framecount = 0;
 
-Host.Error = function(error)
-{
+Host.Error = function (error) {
 	if (Host.inerror === true)
 		Sys.Error('Host.Error: recursively entered');
 	Host.inerror = true;
@@ -12,15 +11,12 @@ Host.Error = function(error)
 	Sys.Error(error);
 };
 
-Host.FindMaxClients = function()
-{
+Host.FindMaxClients = function () {
 	var i = COM.CheckParm('-maxplayers');
 	SV.svs.maxclients = 8;
-	if (i != null)
-	{
+	if (i != null) {
 		++i;
-		if (i < COM.argv.length)
-		{
+		if (i < COM.argv.length) {
 			SV.svs.maxclients = Q.atoi(COM.argv[i]);
 			if (SV.svs.maxclients <= 0)
 				SV.svs.maxclients = 8;
@@ -30,11 +26,10 @@ Host.FindMaxClients = function()
 	}
 	SV.svs.maxclientslimit = SV.svs.maxclients;
 	SV.svs.clients = [];
-	for (i = 0; i < SV.svs.maxclientslimit; ++i)
-	{
+	for (i = 0; i < SV.svs.maxclientslimit; ++i) {
 		SV.svs.clients[i] = {
 			num: i,
-			message: {data: new ArrayBuffer(8000), cursize: 0, allowoverflow: true},
+			message: { data: new ArrayBuffer(8000), cursize: 0, allowoverflow: true },
 			colors: 0,
 			old_frags: 0
 		};
@@ -45,8 +40,7 @@ Host.FindMaxClients = function()
 		Cvar.SetValue('deathmatch', 0);
 };
 
-Host.InitLocal = function()
-{
+Host.InitLocal = function () {
 	Host.InitCommands();
 	Host.framerate = Cvar.RegisterVariable('host_framerate', '0');
 	Host.speeds = Cvar.RegisterVariable('host_speeds', '0');
@@ -67,11 +61,9 @@ Host.InitLocal = function()
 	Host.FindMaxClients();
 };
 
-Host.GetConsoleCommands = function()
-{
+Host.GetConsoleCommands = function () {
 	var cmd;
-	for (;;)
-	{
+	for (; ;) {
 		cmd = Sys.ConsoleInput();
 		if (cmd == null)
 			return;
@@ -79,17 +71,14 @@ Host.GetConsoleCommands = function()
 	}
 };
 
-Host.ClientPrint = function(string)
-{
+Host.ClientPrint = function (string) {
 	MSG.WriteByte(Host.client.message, Protocol.svc.print);
 	MSG.WriteString(Host.client.message, string);
 };
 
-Host.BroadcastPrint = function(string)
-{
+Host.BroadcastPrint = function (string) {
 	var i, client;
-	for (i = 0; i < SV.svs.maxclients; ++i)
-	{
+	for (i = 0; i < SV.svs.maxclients; ++i) {
 		client = SV.svs.clients[i];
 		if ((client.active !== true) || (client.spawned !== true))
 			continue;
@@ -98,18 +87,14 @@ Host.BroadcastPrint = function(string)
 	}
 };
 
-Host.DropClient = function(crash)
-{
+Host.DropClient = function (crash) {
 	var client = Host.client;
-	if (crash !== true)
-	{
-		if (NET.CanSendMessage(client.netconnection) === true)
-		{
+	if (crash !== true) {
+		if (NET.CanSendMessage(client.netconnection) === true) {
 			MSG.WriteByte(client.message, Protocol.svc.disconnect);
 			NET.SendMessage(client.netconnection, client.message);
 		}
-		if ((client.edict != null) && (client.spawned === true))
-		{
+		if ((client.edict != null) && (client.spawned === true)) {
 			var saveSelf = PR.globals_int[PR.globalvars.self];
 			PR.globals_int[PR.globalvars.self] = client.edict.num;
 			PR.ExecuteProgram(PR.globals_int[PR.globalvars.ClientDisconnect]);
@@ -124,8 +109,7 @@ Host.DropClient = function(crash)
 	client.old_frags = -999999;
 	--NET.activeconnections;
 	var i, num = client.num;
-	for (i = 0; i < SV.svs.maxclients; ++i)
-	{
+	for (i = 0; i < SV.svs.maxclients; ++i) {
 		client = SV.svs.clients[i];
 		if (client.active !== true)
 			continue;
@@ -141,22 +125,18 @@ Host.DropClient = function(crash)
 	}
 };
 
-Host.ShutdownServer = function(crash)
-{
+Host.ShutdownServer = function (crash) {
 	if (SV.server.active !== true)
 		return;
 	SV.server.active = false;
 	var start = Sys.FloatTime(), count, i;
-	do
-	{
+	do {
 		count = 0;
-		for (i = 0; i < SV.svs.maxclients; ++i)
-		{
+		for (i = 0; i < SV.svs.maxclients; ++i) {
 			Host.client = SV.svs.clients[i];
 			if ((Host.client.active !== true) || (Host.client.message.cursize === 0))
 				continue;
-			if (NET.CanSendMessage(Host.client.netconnection) === true)
-			{
+			if (NET.CanSendMessage(Host.client.netconnection) === true) {
 				NET.SendMessage(Host.client.netconnection, Host.client.message);
 				Host.client.message.cursize = 0;
 				continue;
@@ -167,23 +147,20 @@ Host.ShutdownServer = function(crash)
 		if ((Sys.FloatTime() - start) > 3.0)
 			break;
 	} while (count !== 0);
-	var buf = {data: new ArrayBuffer(4), cursize: 1};
+	var buf = { data: new ArrayBuffer(4), cursize: 1 };
 	(new Uint8Array(buf.data))[0] = Protocol.svc.disconnect;
 	count = NET.SendToAll(buf);
 	if (count !== 0)
 		Con.Print('Host.ShutdownServer: NET.SendToAll failed for ' + count + ' clients\n');
-	for (i = 0; i < SV.svs.maxclients; ++i)
-	{
+	for (i = 0; i < SV.svs.maxclients; ++i) {
 		Host.client = SV.svs.clients[i];
 		if (Host.client.active === true)
 			Host.DropClient(crash);
 	}
 };
 
-Host.RemoteCommand = function(from, data, password)
-{
-	if ((Host.rcon_password.string.length === 0) || (password !== Host.rcon_password.string))
-	{
+Host.RemoteCommand = function (from, data, password) {
+	if ((Host.rcon_password.string.length === 0) || (password !== Host.rcon_password.string)) {
 		Con.Print('Bad rcon from ' + from + ':\n' + data + '\n');
 		return;
 	};
@@ -192,8 +169,7 @@ Host.RemoteCommand = function(from, data, password)
 	return true;
 };
 
-Host.ServerFrame = function()
-{
+Host.ServerFrame = function () {
 	PR.globals_float[PR.globalvars.frametime] = Host.frametime;
 	SV.server.datagram.cursize = 0;
 	SV.CheckForNewClients();
@@ -204,8 +180,7 @@ Host.ServerFrame = function()
 };
 
 Host.realtime = 0.0;
-Host._Frame = function()
-{
+Host._Frame = function () {
 	Math.random();
 
 	Host.realtime = Sys.FloatTime();
@@ -213,8 +188,7 @@ Host._Frame = function()
 	Host.oldrealtime = Host.realtime;
 	if (Host.framerate.value > 0)
 		Host.frametime = Host.framerate.value;
-	else
-	{
+	else {
 		if (Host.frametime > 0.1)
 			Host.frametime = 0.1;
 		else if (Host.frametime < 0.001)
@@ -229,11 +203,9 @@ Host._Frame = function()
 
 Host.timetotal = 0.0;
 Host.timecount = 0;
-Host.Frame = function()
-{
+Host.Frame = function () {
 	setTimeout(Host.Frame, Host.ticrate.value * 1000.0);
-	if (Host.serverprofile.value === 0)
-	{
+	if (Host.serverprofile.value === 0) {
 		Host._Frame();
 		return;
 	}
@@ -246,16 +218,14 @@ Host.Frame = function()
 	Host.timecount = 0;
 	Host.timetotal = 0.0;
 	var i, c = 0;
-	for (i = 0; i < SV.svs.maxclients; ++i)
-	{
+	for (i = 0; i < SV.svs.maxclients; ++i) {
 		if (SV.svs.clients[i].active === true)
 			++c;
 	}
 	Con.Print('serverprofile: ' + (c <= 9 ? ' ' : '') + c + ' clients ' + (m <= 9 ? ' ' : '') + m + ' msec\n');
 };
 
-Host.Init = function()
-{
+Host.Init = function () {
 	Host.oldrealtime = Sys.FloatTime();
 	Cmd.Init();
 	V.Init();
@@ -271,16 +241,13 @@ Host.Init = function()
 
 // Commands
 
-Host.Quit_f = function()
-{
+Host.Quit_f = function () {
 	Sys.Quit();
 };
 
-Host.Status_f = function()
-{
+Host.Status_f = function () {
 	var print;
-	if (Cmd.client !== true)
-	{
+	if (Cmd.client !== true) {
 		if (SV.server.active !== true)
 			return;
 		print = Con.Print;
@@ -292,8 +259,7 @@ Host.Status_f = function()
 	print('map:     ' + PR.GetString(PR.globals_int[PR.globalvars.mapname]) + '\n');
 	print('players: ' + NET.activeconnections + ' active (' + SV.svs.maxclients + ' max)\n\n');
 	var i, client, str, frags, hours, minutes, seconds;
-	for (i = 0; i < SV.svs.maxclients; ++i)
-	{
+	for (i = 0; i < SV.svs.maxclients; ++i) {
 		client = SV.svs.clients[i];
 		if (client.active !== true)
 			continue;
@@ -304,8 +270,7 @@ Host.Status_f = function()
 			frags = ' ' + frags;
 		seconds = (NET.time - client.netconnection.connecttime) >> 0;
 		minutes = (seconds / 60) >> 0;
-		if (minutes !== 0)
-		{
+		if (minutes !== 0) {
 			seconds -= minutes * 60;
 			hours = (minutes / 60) >> 0;
 			if (hours !== 0)
@@ -317,7 +282,7 @@ Host.Status_f = function()
 		if (i <= 8)
 			str += ' ';
 		str += SV.GetClientName(client);
-		for (; str.length <= 21; )
+		for (; str.length <= 21;)
 			str += ' ';
 		str += frags + '  ';
 		if (hours <= 9)
@@ -333,8 +298,7 @@ Host.Status_f = function()
 	}
 };
 
-Host.God_f = function()
-{
+Host.God_f = function () {
 	if (Cmd.client !== true)
 		return;
 	if (PR.globals_float[PR.globalvars.deathmatch] !== 0)
@@ -346,8 +310,7 @@ Host.God_f = function()
 		Host.ClientPrint('godmode ON\n');
 };
 
-Host.Notarget_f = function()
-{
+Host.Notarget_f = function () {
 	if (Cmd.client !== true)
 		return;
 	if (PR.globals_float[PR.globalvars.deathmatch] !== 0)
@@ -359,14 +322,12 @@ Host.Notarget_f = function()
 		Host.ClientPrint('notarget ON\n');
 };
 
-Host.Noclip_f = function()
-{
+Host.Noclip_f = function () {
 	if (Cmd.client !== true)
 		return;
 	if (PR.globals_float[PR.globalvars.deathmatch] !== 0)
 		return;
-	if (SV.player.v_float[PR.entvars.movetype] !== SV.movetype.noclip)
-	{
+	if (SV.player.v_float[PR.entvars.movetype] !== SV.movetype.noclip) {
 		Host.noclip_anglehack = true;
 		SV.player.v_float[PR.entvars.movetype] = SV.movetype.noclip;
 		Host.ClientPrint('noclip ON\n');
@@ -377,14 +338,12 @@ Host.Noclip_f = function()
 	Host.ClientPrint('noclip OFF\n');
 };
 
-Host.Fly_f = function()
-{
+Host.Fly_f = function () {
 	if (Cmd.client !== true)
 		return;
 	if (PR.globals_float[PR.globalvars.deathmatch] !== 0)
 		return;
-	if (SV.player.v_float[PR.entvars.movetype] !== SV.movetype.fly)
-	{
+	if (SV.player.v_float[PR.entvars.movetype] !== SV.movetype.fly) {
 		SV.player.v_float[PR.entvars.movetype] = SV.movetype.fly;
 		Host.ClientPrint('flymode ON\n');
 		return;
@@ -393,14 +352,12 @@ Host.Fly_f = function()
 	Host.ClientPrint('flymode OFF\n');
 };
 
-Host.Ping_f = function()
-{
+Host.Ping_f = function () {
 	if (Cmd.client !== true)
 		return;
 	Host.ClientPrint('Client ping times:\n');
 	var i, client, total, j;
-	for (i = 0; i < SV.svs.maxclients; ++i)
-	{
+	for (i = 0; i < SV.svs.maxclients; ++i) {
 		client = SV.svs.clients[i];
 		if (client.active !== true)
 			continue;
@@ -418,10 +375,8 @@ Host.Ping_f = function()
 	}
 };
 
-Host.Map_f = function()
-{
-	if (Cmd.argv.length <= 1)
-	{
+Host.Map_f = function () {
+	if (Cmd.argv.length <= 1) {
 		Con.Print('USAGE: map <map>\n');
 		return;
 	}
@@ -432,15 +387,12 @@ Host.Map_f = function()
 	SV.SpawnServer(Cmd.argv[1]);
 };
 
-Host.Changelevel_f = function()
-{
-	if (Cmd.argv.length !== 2)
-	{
+Host.Changelevel_f = function () {
+	if (Cmd.argv.length !== 2) {
 		Con.Print('changelevel <levelname> : continue game on a new level\n');
 		return;
 	}
-	if (SV.server.active !== true)
-	{
+	if (SV.server.active !== true) {
 		Con.Print('Only the server may changelevel\n');
 		return;
 	}
@@ -448,14 +400,12 @@ Host.Changelevel_f = function()
 	SV.SpawnServer(Cmd.argv[1]);
 };
 
-Host.Restart_f = function()
-{
+Host.Restart_f = function () {
 	if ((SV.server.active === true) && (Cmd.client !== true))
 		SV.SpawnServer(PR.GetString(PR.globals_int[PR.globalvars.mapname]));
 };
 
-Host.Name_f = function()
-{
+Host.Name_f = function () {
 	if ((Cmd.argv.length <= 1) || (Cmd.client !== true))
 		return;
 
@@ -473,14 +423,12 @@ Host.Name_f = function()
 	MSG.WriteString(msg, newName);
 };
 
-Host.Version_f = function()
-{
+Host.Version_f = function () {
 	Con.Print('Version 1.09\n');
 	Con.Print(Def.timedate);
 };
 
-Host.Say = function(teamonly)
-{
+Host.Say = function (teamonly) {
 	if (SV.server.active !== true)
 		return;
 	if (Cmd.argv.length <= 1)
@@ -491,8 +439,7 @@ Host.Say = function(teamonly)
 		p = p.substring(1, p.length - 1);
 	if (Cmd.client === true)
 		text = '\1' + SV.GetClientName(save) + ': ';
-	else
-	{
+	else {
 		text = '\1<' + NET.hostname.string + '> ';
 		teamonly = false;
 	}
@@ -501,8 +448,7 @@ Host.Say = function(teamonly)
 		p = p.substring(0, i);
 	text += p + '\n';
 	var client;
-	for (i = 0; i < SV.svs.maxclients; ++i)
-	{
+	for (i = 0; i < SV.svs.maxclients; ++i) {
 		client = SV.svs.clients[i];
 		if ((client.active !== true) || (client.spawned !== true))
 			continue;
@@ -515,13 +461,11 @@ Host.Say = function(teamonly)
 	Sys.Print(text.substring(1));
 };
 
-Host.Say_Team_f = function()
-{
+Host.Say_Team_f = function () {
 	Host.Say(true);
 };
 
-Host.Tell_f = function()
-{
+Host.Tell_f = function () {
 	if (Cmd.client !== true)
 		return;
 	if (Cmd.argv.length <= 2)
@@ -532,11 +476,10 @@ Host.Tell_f = function()
 		p = p.substring(1, p.length - 1);
 	var i = 62 - text.length;
 	if (p.length > i)
-		 p = p.substring(0, i);
+		p = p.substring(0, i);
 	text += p + '\n';
 	var save = Host.client, client;
-	for (i = 0; i < SV.svs.maxclients; ++i)
-	{
+	for (i = 0; i < SV.svs.maxclients; ++i) {
 		client = SV.svs.clients[i];
 		if ((client.active !== true) || (client.spawned !== true))
 			continue;
@@ -549,16 +492,14 @@ Host.Tell_f = function()
 	Host.client = save;
 };
 
-Host.Color_f = function()
-{
+Host.Color_f = function () {
 	if ((Cmd.argv.length <= 1) || (Cmd.client !== true))
 		return;
 
 	var top, bottom;
 	if (Cmd.argv.length === 2)
 		top = bottom = (Q.atoi(Cmd.argv[1]) & 15) >>> 0;
-	else
-	{
+	else {
 		top = (Q.atoi(Cmd.argv[1]) & 15) >>> 0;
 		bottom = (Q.atoi(Cmd.argv[2]) & 15) >>> 0;
 	}
@@ -576,12 +517,10 @@ Host.Color_f = function()
 	MSG.WriteByte(msg, playercolor);
 };
 
-Host.Kill_f = function()
-{
+Host.Kill_f = function () {
 	if (Cmd.client !== true)
 		return;
-	if (SV.player.v_float[PR.entvars.health] <= 0.0)
-	{
+	if (SV.player.v_float[PR.entvars.health] <= 0.0) {
 		Host.ClientPrint('Can\'t suicide -- allready dead!\n');
 		return;
 	}
@@ -590,12 +529,10 @@ Host.Kill_f = function()
 	PR.ExecuteProgram(PR.globals_int[PR.globalvars.ClientKill]);
 };
 
-Host.Pause_f = function()
-{
+Host.Pause_f = function () {
 	if (Cmd.client !== true)
 		return;
-	if (Host.pausable.value === 0)
-	{
+	if (Host.pausable.value === 0) {
 		Host.ClientPrint('Pause not allowed.\n');
 		return;
 	}
@@ -605,16 +542,13 @@ Host.Pause_f = function()
 	MSG.WriteByte(SV.server.reliable_datagram, SV.server.paused === true ? 1 : 0);
 };
 
-Host.PreSpawn_f = function()
-{
-	if (Cmd.client !== true)
-	{
+Host.PreSpawn_f = function () {
+	if (Cmd.client !== true) {
 		Con.Print('prespawn is not valid from the console\n');
 		return;
 	}
 	var client = Host.client;
-	if (client.spawned === true)
-	{
+	if (client.spawned === true) {
 		Con.Print('prespawn not valid -- allready spawned\n');
 		return;
 	}
@@ -624,16 +558,13 @@ Host.PreSpawn_f = function()
 	client.sendsignon = true;
 };
 
-Host.Spawn_f = function()
-{
-	if (Cmd.client !== true)
-	{
+Host.Spawn_f = function () {
+	if (Cmd.client !== true) {
 		Con.Print('spawn is not valid from the console\n');
 		return;
 	}
 	var client = Host.client;
-	if (client.spawned === true)
-	{
+	if (client.spawned === true) {
 		Con.Print('Spawn not valid -- allready spawned\n');
 		return;
 	}
@@ -659,8 +590,7 @@ Host.Spawn_f = function()
 	message.cursize = 0;
 	MSG.WriteByte(message, Protocol.svc.time);
 	MSG.WriteFloat(message, SV.server.time);
-	for (i = 0; i < SV.svs.maxclients; ++i)
-	{
+	for (i = 0; i < SV.svs.maxclients; ++i) {
 		client = SV.svs.clients[i];
 		MSG.WriteByte(message, Protocol.svc.updatename);
 		MSG.WriteByte(message, i);
@@ -672,8 +602,7 @@ Host.Spawn_f = function()
 		MSG.WriteByte(message, i);
 		MSG.WriteByte(message, client.colors);
 	}
-	for (i = 0; i <= 63; ++i)
-	{
+	for (i = 0; i <= 63; ++i) {
 		MSG.WriteByte(message, Protocol.svc.lightstyle);
 		MSG.WriteByte(message, i);
 		MSG.WriteString(message, SV.server.lightstyles[i]);
@@ -701,26 +630,22 @@ Host.Spawn_f = function()
 	Host.client.sendsignon = true;
 };
 
-Host.Begin_f = function()
-{
-	if (Cmd.client !== true)
-	{
+Host.Begin_f = function () {
+	if (Cmd.client !== true) {
 		Con.Print('begin is not valid from the console\n');
 		return;
 	}
 	Host.client.spawned = true;
 };
 
-Host.Kick_f = function()
-{
+Host.Kick_f = function () {
 	if (SV.server.active !== true)
 		return;
 	if ((Cmd.client === true) && (PR.globals_float[PR.globalvars.deathmatch] !== 0.0))
 		return;
 	var save = Host.client;
 	var i, byNumber;
-	if ((Cmd.argv.length >= 3) && (Cmd.argv[1] === '#'))
-	{
+	if ((Cmd.argv.length >= 3) && (Cmd.argv[1] === '#')) {
 		i = Q.atoi(Cmd.argv[2]) - 1;
 		if ((i < 0) || (i >= SV.svs.maxclients))
 			return;
@@ -729,10 +654,8 @@ Host.Kick_f = function()
 		Host.client = SV.svs.clients[i];
 		byNumber = true;
 	}
-	else
-	{
-		for (i = 0; i < SV.svs.maxclients; ++i)
-		{
+	else {
+		for (i = 0; i < SV.svs.maxclients; ++i) {
 			Host.client = SV.svs.clients[i];
 			if (Host.client.active !== true)
 				continue;
@@ -740,16 +663,14 @@ Host.Kick_f = function()
 				break;
 		}
 	}
-	if (i >= SV.svs.maxclients)
-	{
+	if (i >= SV.svs.maxclients) {
 		Host.client = save;
 		return;
 	}
 	var who;
 	if (Cmd.client !== true)
 		who = 'Console';
-	else
-	{
+	else {
 		if (Host.client === save)
 			return;
 		who = SV.GetClientName(save);
@@ -757,21 +678,17 @@ Host.Kick_f = function()
 	var message;
 	if (Cmd.argv.length >= 3)
 		message = COM.Parse(Cmd.args);
-	if (message != null)
-	{
+	if (message != null) {
 		var p = 0;
-		if (byNumber === true)
-		{
+		if (byNumber === true) {
 			++p;
-			for (; p < message.length; ++p)
-			{
+			for (; p < message.length; ++p) {
 				if (message.charCodeAt(p) !== 32)
 					break;
 			}
 			p += Cmd.argv[2].length;
 		}
-		for (; p < message.length; ++p)
-		{
+		for (; p < message.length; ++p) {
 			if (message.charCodeAt(p) !== 32)
 				break;
 		}
@@ -783,8 +700,7 @@ Host.Kick_f = function()
 	Host.client = save;
 };
 
-Host.Give_f = function()
-{
+Host.Give_f = function () {
 	if (Cmd.client !== true)
 		return;
 	if (PR.globals_float[PR.globalvars.deathmatch] !== 0)
@@ -794,16 +710,13 @@ Host.Give_f = function()
 	var t = Cmd.argv[1].charCodeAt(0);
 	var ent = SV.player;
 
-	if ((t >= 48) && (t <= 57))
-	{
-		if (COM.hipnotic !== true)
-		{
+	if ((t >= 48) && (t <= 57)) {
+		if (COM.hipnotic !== true) {
 			if (t >= 50)
 				ent.v_float[PR.entvars.items] |= Def.it.shotgun << (t - 50);
 			return;
 		}
-		if (t === 54)
-		{
+		if (t === 54) {
 			if (Cmd.argv[1].charCodeAt(1) === 97)
 				ent.v_float[PR.entvars.items] |= Def.hit.proximity_gun;
 			else
@@ -819,100 +732,133 @@ Host.Give_f = function()
 		return;
 	}
 	var v = Q.atoi(Cmd.argv[2]);
-	if (t === 104)
-	{
+	if (t === 104) {
 		ent.v_float[PR.entvars.health] = v;
 		return;
 	}
-	if (COM.rogue !== true)
-	{
-		switch (t)
-		{
+	if (COM.rogue !== true) {
+		switch (t) {
+			case 115:
+				ent.v_float[PR.entvars.ammo_shells] = v;
+				return;
+			case 110:
+				ent.v_float[PR.entvars.ammo_nails] = v;
+				return;
+			case 114:
+				ent.v_float[PR.entvars.ammo_rockets] = v;
+				return;
+			case 99:
+				ent.v_float[PR.entvars.ammo_cells] = v;
+		}
+		return;
+	}
+	switch (t) {
 		case 115:
+			if (PR.entvars.ammo_shells1 != null)
+				ent.v_float[PR.entvars.ammo_shells1] = v;
 			ent.v_float[PR.entvars.ammo_shells] = v;
 			return;
 		case 110:
-			ent.v_float[PR.entvars.ammo_nails] = v;
+			if (PR.entvars.ammo_nails1 != null) {
+				ent.v_float[PR.entvars.ammo_nails1] = v;
+				if (ent.v_float[PR.entvars.weapon] <= Def.it.lightning)
+					ent.v_float[PR.entvars.ammo_nails] = v;
+			}
+			return;
+		case 108:
+			if (PR.entvars.ammo_lava_nails != null) {
+				ent.v_float[PR.entvars.ammo_lava_nails] = v;
+				if (ent.v_float[PR.entvars.weapon] > Def.it.lightning)
+					ent.v_float[PR.entvars.ammo_nails] = v;
+			}
 			return;
 		case 114:
-			ent.v_float[PR.entvars.ammo_rockets] = v;
+			if (PR.entvars.ammo_rockets1 != null) {
+				ent.v_float[PR.entvars.ammo_rockets1] = v;
+				if (ent.v_float[PR.entvars.weapon] <= Def.it.lightning)
+					ent.v_float[PR.entvars.ammo_rockets] = v;
+			}
+			return;
+		case 109:
+			if (PR.entvars.ammo_multi_rockets != null) {
+				ent.v_float[PR.entvars.ammo_multi_rockets] = v;
+				if (ent.v_float[PR.entvars.weapon] > Def.it.lightning)
+					ent.v_float[PR.entvars.ammo_rockets] = v;
+			}
 			return;
 		case 99:
-			ent.v_float[PR.entvars.ammo_cells] = v;
-		}
-		return;
-	}
-	switch (t)
-	{
-	case 115:
-		if (PR.entvars.ammo_shells1 != null)
-			ent.v_float[PR.entvars.ammo_shells1] = v;
-		ent.v_float[PR.entvars.ammo_shells] = v;
-		return;
-	case 110:
-		if (PR.entvars.ammo_nails1 != null)
-		{
-			ent.v_float[PR.entvars.ammo_nails1] = v;
-			if (ent.v_float[PR.entvars.weapon] <= Def.it.lightning)
-				ent.v_float[PR.entvars.ammo_nails] = v;
-		}
-		return;
-	case 108:
-		if (PR.entvars.ammo_lava_nails != null)
-		{
-			ent.v_float[PR.entvars.ammo_lava_nails] = v;
-			if (ent.v_float[PR.entvars.weapon] > Def.it.lightning)
-				ent.v_float[PR.entvars.ammo_nails] = v;
-		}
-		return;
-	case 114:
-		if (PR.entvars.ammo_rockets1 != null)
-		{
-			ent.v_float[PR.entvars.ammo_rockets1] = v;
-			if (ent.v_float[PR.entvars.weapon] <= Def.it.lightning)
-				ent.v_float[PR.entvars.ammo_rockets] = v;
-		}
-		return;
-	case 109:
-		if (PR.entvars.ammo_multi_rockets != null)
-		{
-			ent.v_float[PR.entvars.ammo_multi_rockets] = v;
-			if (ent.v_float[PR.entvars.weapon] > Def.it.lightning)
-				ent.v_float[PR.entvars.ammo_rockets] = v;
-		}
-		return;
-	case 99:
-		if (PR.entvars.ammo_cells1 != null)
-		{
-			ent.v_float[PR.entvars.ammo_cells1] = v;
-			if (ent.v_float[PR.entvars.weapon] <= Def.it.lightning)
-				ent.v_float[PR.entvars.ammo_cells] = v;
-		}
-		return;
-	case 112:
-		if (PR.entvars.ammo_plasma != null)
-		{
-			ent.v_float[PR.entvars.ammo_plasma] = v;
-			if (ent.v_float[PR.entvars.weapon] > Def.it.lightning)
-				ent.v_float[PR.entvars.ammo_cells] = v;
-		}
+			if (PR.entvars.ammo_cells1 != null) {
+				ent.v_float[PR.entvars.ammo_cells1] = v;
+				if (ent.v_float[PR.entvars.weapon] <= Def.it.lightning)
+					ent.v_float[PR.entvars.ammo_cells] = v;
+			}
+			return;
+		case 112:
+			if (PR.entvars.ammo_plasma != null) {
+				ent.v_float[PR.entvars.ammo_plasma] = v;
+				if (ent.v_float[PR.entvars.weapon] > Def.it.lightning)
+					ent.v_float[PR.entvars.ammo_cells] = v;
+			}
 	}
 };
 
-Host.Startdemos_f = function()
-{
+/**
+ * Changes to a new map while clearing the player states
+ */
+Host.Map2_f = function () {
+	if (Cmd.argv.length !== 2) {
+		Con.Print('map2 <map> : switches to a new map wiping players state\n');
+		return;
+	}
+	if (Cmd.client === true)
+		return;
+	SV.svs.serverflags = 0;
+	SV.SpawnServer(Cmd.argv[1]);
+};
+
+/**
+ * Command that rotates the map
+ */
+Host.MapRotation_f = function () {
+	// TODO: figure out how to read a file.
+	// TODO: figure out how to perodically check the frag count or play time as a condition to change map?
+	// TODO: switch to next map in rotation (or perhaps random or voted map?)
+	var mapList = ['DM1', 'DM2', 'DM3', 'DM4', 'DM5', 'DM6'];
+	var mapIndex = 0;
+
+	function changeToNextMap() {
+		mapIndex = (mapIndex + 1) % mapList.length;
+		var map = mapList[mapIndex];
+		Sys.Print("Map rotating to " + map + "\n");
+		Cmd.ExecuteString('map2 ' + map); // TODO: Maybe there is a way to call command directly?
+	}
+
+	// Change map every 5 minutes.
+	clearInterval(Host._mapRotateInterval);
+	Host._mapRotateInterval = setInterval(changeToNextMap, 5 * 60000);
+
+	// Change map right now.
+	changeToNextMap();
+};
+
+
+Host.Startdemos_f = function () {
 	if (SV.server.active !== true)
 		Cmd.text += 'map start\n';
 };
 
-Host.InitCommands = function()
-{
+/**
+ * Initializes the console commands
+ */
+Host.InitCommands = function () {
 	Cmd.AddCommand('status', Host.Status_f);
 	Cmd.AddCommand('quit', Host.Quit_f);
 	Cmd.AddCommand('god', Host.God_f);
 	Cmd.AddCommand('notarget', Host.Notarget_f);
 	Cmd.AddCommand('fly', Host.Fly_f);
+	Cmd.AddCommand('maprotation', Host.MapRotation_f);
 	Cmd.AddCommand('map', Host.Map_f);
+	Cmd.AddCommand('map2', Host.Map2_f);
 	Cmd.AddCommand('restart', Host.Restart_f);
 	Cmd.AddCommand('changelevel', Host.Changelevel_f);
 	Cmd.AddCommand('name', Host.Name_f);

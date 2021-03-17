@@ -1,7 +1,6 @@
 V = {};
 
-V.CalcRoll = function(angles, velocity)
-{
+V.CalcRoll = function (angles, velocity) {
 	var right = [];
 	Vec.AngleVectors(angles, null, right);
 	var side = velocity[0] * right[0] + velocity[1] * right[1] + velocity[2] * right[2];
@@ -12,8 +11,7 @@ V.CalcRoll = function(angles, velocity)
 	return V.rollangle.value * sign;
 };
 
-V.Init = function()
-{
+V.Init = function () {
 	V.rollspeed = Cvar.RegisterVariable('cl_rollspeed', '200');
 	V.rollangle = Cvar.RegisterVariable('cl_rollangle', '2.0');
 };

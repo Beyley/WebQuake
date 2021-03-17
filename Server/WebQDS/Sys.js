@@ -1,30 +1,25 @@
 Sys = {};
 
-Sys.Quit = function()
-{
+Sys.Quit = function () {
 	process.exit(0);
 };
 
-Sys.Print = function(text)
-{
+Sys.Print = function (text) {
 	process.stdout.write(text);
 };
 
-Sys.Error = function(text)
-{
+Sys.Error = function (text) {
 	console.log(text);
 	throw new Error(text);
 };
 
-Sys.FloatTime = function()
-{
+Sys.FloatTime = function () {
 	var time = process.hrtime(Sys.oldtime);
 	return time[0] + (time[1] / 1000000000.0);
 };
 
 Sys.cmd = '';
-Sys.ConsoleInput = function()
-{
+Sys.ConsoleInput = function () {
 	var text = Sys.cmd;
 	if (text.length === 0)
 		return;
@@ -32,8 +27,7 @@ Sys.ConsoleInput = function()
 	return text;
 };
 
-Sys.main = function()
-{
+Sys.main = function () {
 	COM.InitArgv(process.argv.slice(1));
 	Sys.oldtime = process.hrtime();
 	Sys.Print('Host.Init\n');
@@ -43,7 +37,6 @@ Sys.main = function()
 	process.nextTick(Host.Frame);
 };
 
-Sys.StdinOnData = function(data)
-{
+Sys.StdinOnData = function (data) {
 	Sys.cmd += Q.memstr(data);
 };

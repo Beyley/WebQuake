@@ -4,21 +4,18 @@ COM.argv = [];
 
 COM.standard_quake = true;
 
-COM.Parse = function(data)
-{
+COM.Parse = function (data) {
 	COM.token = '';
 	var i = 0, c;
 	if (data.length === 0)
 		return;
-		
+
 	var skipwhite = true;
-	for (;;)
-	{
+	for (; ;) {
 		if (skipwhite !== true)
 			break;
 		skipwhite = false;
-		for (;;)
-		{
+		for (; ;) {
 			if (i >= data.length)
 				return;
 			c = data.charCodeAt(i);
@@ -26,10 +23,8 @@ COM.Parse = function(data)
 				break;
 			++i;
 		}
-		if ((c === 47) && (data.charCodeAt(i + 1) == 47))
-		{
-			for (;;)
-			{
+		if ((c === 47) && (data.charCodeAt(i + 1) == 47)) {
+			for (; ;) {
 				if ((i >= data.length) || (data.charCodeAt(i) === 10))
 					break;
 				++i;
@@ -38,11 +33,9 @@ COM.Parse = function(data)
 		}
 	}
 
-	if (c === 34)
-	{
+	if (c === 34) {
 		++i;
-		for (;;)
-		{
+		for (; ;) {
 			c = data.charCodeAt(i);
 			++i;
 			if ((i >= data.length) || (c === 34))
@@ -51,8 +44,7 @@ COM.Parse = function(data)
 		}
 	}
 
-	for (;;)
-	{
+	for (; ;) {
 		if ((i >= data.length) || (c <= 32))
 			break;
 		COM.token += String.fromCharCode(c);
@@ -63,21 +55,17 @@ COM.Parse = function(data)
 	return data.substring(i);
 };
 
-COM.CheckParm = function(parm)
-{
+COM.CheckParm = function (parm) {
 	var i;
-	for (i = 1; i < COM.argv.length; ++i)
-	{
+	for (i = 1; i < COM.argv.length; ++i) {
 		if (COM.argv[i] === parm)
 			return i;
 	}
 };
 
-COM.CheckRegistered = function()
-{
+COM.CheckRegistered = function () {
 	var h = COM.LoadFile('gfx/pop.lmp');
-	if (h == null)
-	{
+	if (h == null) {
 		Con.Print('Playing shareware version.\n');
 		if (COM.modified === true)
 			Sys.Error('You must have the registered version to use modified games');
@@ -85,27 +73,26 @@ COM.CheckRegistered = function()
 	}
 	var check = new Uint8Array(h);
 	var pop =
-	[
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x66, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x67, 0x00, 0x00,
-		0x00, 0x00, 0x66, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x65, 0x66, 0x00,
-		0x00, 0x63, 0x65, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x61, 0x65, 0x63,
-		0x00, 0x64, 0x65, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x61, 0x65, 0x64,
-		0x00, 0x64, 0x65, 0x64, 0x00, 0x00, 0x64, 0x69, 0x69, 0x69, 0x64, 0x00, 0x00, 0x64, 0x65, 0x64,
-		0x00, 0x63, 0x65, 0x68, 0x62, 0x00, 0x00, 0x64, 0x68, 0x64, 0x00, 0x00, 0x62, 0x68, 0x65, 0x63,
-		0x00, 0x00, 0x65, 0x67, 0x69, 0x63, 0x00, 0x64, 0x67, 0x64, 0x00, 0x63, 0x69, 0x67, 0x65, 0x00,
-		0x00, 0x00, 0x62, 0x66, 0x67, 0x69, 0x6A, 0x68, 0x67, 0x68, 0x6A, 0x69, 0x67, 0x66, 0x62, 0x00,
-		0x00, 0x00, 0x00, 0x62, 0x65, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x65, 0x62, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x62, 0x63, 0x64, 0x66, 0x64, 0x63, 0x62, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x62, 0x66, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x61, 0x66, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-	];
+		[
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x66, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x67, 0x00, 0x00,
+			0x00, 0x00, 0x66, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x65, 0x66, 0x00,
+			0x00, 0x63, 0x65, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x61, 0x65, 0x63,
+			0x00, 0x64, 0x65, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x61, 0x65, 0x64,
+			0x00, 0x64, 0x65, 0x64, 0x00, 0x00, 0x64, 0x69, 0x69, 0x69, 0x64, 0x00, 0x00, 0x64, 0x65, 0x64,
+			0x00, 0x63, 0x65, 0x68, 0x62, 0x00, 0x00, 0x64, 0x68, 0x64, 0x00, 0x00, 0x62, 0x68, 0x65, 0x63,
+			0x00, 0x00, 0x65, 0x67, 0x69, 0x63, 0x00, 0x64, 0x67, 0x64, 0x00, 0x63, 0x69, 0x67, 0x65, 0x00,
+			0x00, 0x00, 0x62, 0x66, 0x67, 0x69, 0x6A, 0x68, 0x67, 0x68, 0x6A, 0x69, 0x67, 0x66, 0x62, 0x00,
+			0x00, 0x00, 0x00, 0x62, 0x65, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x65, 0x62, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x62, 0x63, 0x64, 0x66, 0x64, 0x63, 0x62, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x62, 0x66, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x61, 0x66, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+		];
 	var i;
-	for (i = 0; i < 256; ++i)
-	{
+	for (i = 0; i < 256; ++i) {
 		if (check[i] !== pop[i])
 			Sys.Error('Corrupted data file.');
 	}
@@ -113,26 +100,22 @@ COM.CheckRegistered = function()
 	Con.Print('Playing registered version.\n');
 };
 
-COM.InitArgv = function(argv)
-{
+COM.InitArgv = function (argv) {
 	COM.cmdline = (argv.join(' ') + ' ').substring(0, 256);
 	var i;
 	for (i = 0; i < argv.length; ++i)
 		COM.argv[i] = argv[i];
-	if (COM.CheckParm('-rogue') != null)
-	{
+	if (COM.CheckParm('-rogue') != null) {
 		COM.rogue = true;
 		COM.standard_quake = false;
 	}
-	else if (COM.CheckParm('-hipnotic') != null)
-	{
+	else if (COM.CheckParm('-hipnotic') != null) {
 		COM.hipnotic = true;
 		COM.standard_quake = false;
 	}
 };
 
-COM.Init = function()
-{
+COM.Init = function () {
 	var swaptest = new ArrayBuffer(2);
 	var swaptestview = new Uint8Array(swaptest);
 	swaptestview[0] = 1;
@@ -147,29 +130,23 @@ COM.Init = function()
 
 COM.searchpaths = [];
 
-COM.LoadFile = function(filename)
-{
+COM.LoadFile = function (filename) {
 	filename = filename.toLowerCase();
 	var src, i, j, k, search, pak, file, fd;
-	for (i = COM.searchpaths.length - 1; i >= 0; --i)
-	{
+	for (i = COM.searchpaths.length - 1; i >= 0; --i) {
 		search = COM.searchpaths[i];
-		for (j = search.pack.length - 1; j >= 0; --j)
-		{
+		for (j = search.pack.length - 1; j >= 0; --j) {
 			pak = search.pack[j];
-			for (k = 0; k < pak.length; ++k)
-			{
+			for (k = 0; k < pak.length; ++k) {
 				file = pak[k];
 				if (file.name !== filename)
 					continue;
 				if (file.filelen === 0)
 					return new ArrayBuffer(0);
-				try
-				{
+				try {
 					fd = Node.fs.openSync(search.filename + '/pak' + j + '.pak', 'r');
 				}
-				catch (e)
-				{
+				catch (e) {
 					break;
 				}
 				Sys.Print('PackFile: ' + search.filename + '/pak' + j + '.pak : ' + filename + '\n')
@@ -181,78 +158,66 @@ COM.LoadFile = function(filename)
 		}
 		if (src != null)
 			break;
-		try
-		{
+		try {
 			src = Node.fs.readFileSync(search.filename + '/' + filename);
 			Sys.Print('FindFile: ' + search.filename + '/' + filename + '\n');
 			break;
 		}
-		catch (e)
-		{
+		catch (e) {
 		}
 	}
-	if (src == null)
-	{
+	if (src == null) {
 		Sys.Print('FindFile: can\'t find ' + filename + '\n');
 		return;
 	}
 	var size = src.length;
 	var dest = new ArrayBuffer(size), view = new DataView(dest);
 	var count = size >> 2;
-	if (count !== 0)
-	{
-		if (COM.bigendien !== true)
-		{
+	if (count !== 0) {
+		if (COM.bigendien !== true) {
 			for (i = 0; i < count; ++i)
 				view.setUint32(i << 2, src.readUInt32LE(i << 2), true);
 		}
-		else
-		{
+		else {
 			for (i = 0; i < count; ++i)
 				view.setUint32(i << 2, src.readUInt32BE(i << 2));
 		}
 	}
 	count <<= 2;
-	switch (size & 3)
-	{
-	case 1:
-		view.setUint8(count, src[count]);
-		break;
-	case 2:
-		view.setUint16(count, src.readUInt16LE(count), true);
-		break;
-	case 3:
-		view.setUint16(count, src.readUInt16LE(count), true);
-		view.setUint8(count + 2, src[count + 2]);
+	switch (size & 3) {
+		case 1:
+			view.setUint8(count, src[count]);
+			break;
+		case 2:
+			view.setUint16(count, src.readUInt16LE(count), true);
+			break;
+		case 3:
+			view.setUint16(count, src.readUInt16LE(count), true);
+			view.setUint8(count + 2, src[count + 2]);
 	}
 	return dest;
 };
 
-COM.LoadTextFile = function(filename)
-{
+COM.LoadTextFile = function (filename) {
 	var buf = COM.LoadFile(filename);
 	if (buf == null)
 		return;
 	var bufview = new Uint8Array(buf);
 	var f = [];
 	var i;
-	for (i = 0; i < bufview.length; ++i)
-	{
+	for (i = 0; i < bufview.length; ++i) {
 		if (bufview[i] !== 13)
 			f[f.length] = String.fromCharCode(bufview[i]);
 	}
 	return f.join('');
 };
 
-COM.LoadPackFile = function(packfile)
-{
+COM.LoadPackFile = function (packfile) {
 	var fd;
-	try
-	{
+	try {
 		fd = Node.fs.openSync(packfile, 'r');
 	}
-	catch (e)
-	{
+	catch (e) {
 		return;
 	}
 	var buf = new Buffer(12);
@@ -265,15 +230,13 @@ COM.LoadPackFile = function(packfile)
 	if (numpackfiles !== 339)
 		COM.modified = true;
 	var pack = [];
-	if (numpackfiles !== 0)
-	{
+	if (numpackfiles !== 0) {
 		buf = new Buffer(dirlen);
 		Node.fs.readSync(fd, buf, 0, dirlen, dirofs);
 		if (CRC.Block(buf) !== 32981)
 			COM.modified = true;
 		var i;
-		for (i = 0; i < numpackfiles; ++i)
-		{
+		for (i = 0; i < numpackfiles; ++i) {
 			pack[pack.length] =
 			{
 				name: Q.memstr(buf.slice(i << 6, (i << 6) + 56)).toLowerCase(),
@@ -287,12 +250,10 @@ COM.LoadPackFile = function(packfile)
 	return pack;
 };
 
-COM.AddGameDirectory = function(dir)
-{
-	var search = {filename: dir, pack: []};
+COM.AddGameDirectory = function (dir) {
+	var search = { filename: dir, pack: [] };
 	var pak, i = 0;
-	for (;;)
-	{
+	for (; ;) {
 		pak = COM.LoadPackFile(dir + '/' + 'pak' + i + '.pak');
 		if (pak == null)
 			break;
@@ -302,32 +263,28 @@ COM.AddGameDirectory = function(dir)
 	COM.searchpaths[COM.searchpaths.length] = search;
 };
 
-COM.InitFilesystem = function()
-{
+COM.InitFilesystem = function () {
 	var i;
 	var search;
-	
+
 	i = COM.CheckParm('-basedir');
-	if (i != null)
-	{
+	if (i != null) {
 		search = COM.argv[i + 1];
 		if (search != null)
 			COM.AddGameDirectory(search);
 	}
 	else
 		COM.AddGameDirectory('id1');
-		
+
 	if (COM.rogue === true)
 		COM.AddGameDirectory('rogue');
 	else if (COM.hipnotic === true)
 		COM.AddGameDirectory('hipnotic');
-		
+
 	i = COM.CheckParm('-game');
-	if (i != null)
-	{
+	if (i != null) {
 		search = COM.argv[i + 1];
-		if (search != null)
-		{
+		if (search != null) {
 			COM.modified = true;
 			COM.AddGameDirectory(search);
 		}

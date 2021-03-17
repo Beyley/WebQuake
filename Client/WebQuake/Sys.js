@@ -2,8 +2,7 @@ Sys = {};
 
 Sys.events = ['onbeforeunload', 'oncontextmenu', 'onfocus', 'onkeydown', 'onkeyup', 'onmousedown', 'onmouseup', 'onmousewheel', 'onunload', 'onwheel'];
 
-Sys.Quit = function()
-{
+Sys.Quit = function () {
 	if (Sys.frame != null)
 		clearInterval(Sys.frame);
 	var i;
@@ -19,14 +18,12 @@ Sys.Quit = function()
 	throw new Error;
 };
 
-Sys.Print = function(text)
-{
+Sys.Print = function (text) {
 	if (window.console != null)
 		console.log(text);
 };
 
-Sys.Error = function(text)
-{
+Sys.Error = function (text) {
 	if (Sys.frame != null)
 		clearInterval(Sys.frame);
 	var i;
@@ -38,8 +35,7 @@ Sys.Error = function(text)
 	i = Con.text.length - 25;
 	if (i < 0)
 		i = 0;
-	if (window.console != null)
-	{
+	if (window.console != null) {
 		for (; i < Con.text.length; ++i)
 			console.log(Con.text[i].text);
 	}
@@ -47,13 +43,11 @@ Sys.Error = function(text)
 	throw new Error(text);
 };
 
-Sys.FloatTime = function()
-{
+Sys.FloatTime = function () {
 	return Date.now() * 0.001 - Sys.oldtime;
 };
 
-window.onload = function()
-{
+window.onload = function () {
 	if (Number.isNaN != null)
 		Q.isNaN = Number.isNaN;
 	else
@@ -64,23 +58,19 @@ window.onload = function()
 	var cmdline = decodeURIComponent(document.location.search);
 	var location = document.location;
 	var argv = [location.href.substring(0, location.href.length - location.search.length)];
-	if (cmdline.charCodeAt(0) === 63)
-	{
+	if (cmdline.charCodeAt(0) === 63) {
 		var text = '';
 		var quotes = false;
 		var c;
-		for (i = 1; i < cmdline.length; ++i)
-		{
+		for (i = 1; i < cmdline.length; ++i) {
 			c = cmdline.charCodeAt(i);
 			if ((c < 32) || (c > 127))
 				continue;
-			if (c === 34)
-			{
+			if (c === 34) {
 				quotes = !quotes;
 				continue;
 			}
-			if ((quotes === false) && (c === 32))
-			{
+			if ((quotes === false) && (c === 32)) {
 				if (text.length === 0)
 					continue;
 				argv[argv.length] = text;
@@ -149,28 +139,23 @@ window.onload = function()
 	Sys.frame = setInterval(Host.Frame, 1000.0 / 60.0);
 };
 
-Sys.onbeforeunload = function()
-{
+Sys.onbeforeunload = function () {
 	return 'Are you sure you want to quit?';
 };
 
-Sys.oncontextmenu = function(e)
-{
+Sys.oncontextmenu = function (e) {
 	e.preventDefault();
 };
 
-Sys.onfocus = function()
-{
+Sys.onfocus = function () {
 	var i;
-	for (i = 0; i < 256; ++i)
-	{
+	for (i = 0; i < 256; ++i) {
 		Key.Event(i);
 		Key.down[i] = false;
 	}
 };
 
-Sys.onkeydown = function(e)
-{
+Sys.onkeydown = function (e) {
 	var key = Sys.scantokey[e.keyCode];
 	if (key == null)
 		return;
@@ -178,8 +163,7 @@ Sys.onkeydown = function(e)
 	e.preventDefault();
 };
 
-Sys.onkeyup = function(e)
-{
+Sys.onkeyup = function (e) {
 	var key = Sys.scantokey[e.keyCode];
 	if (key == null)
 		return;
@@ -187,63 +171,56 @@ Sys.onkeyup = function(e)
 	e.preventDefault();
 };
 
-Sys.onmousedown = function(e)
-{
+Sys.onmousedown = function (e) {
 	var key;
-	switch (e.which)
-	{
-	case 1:
-		key = Key.k.mouse1;
-		break;
-	case 2:
-		key = Key.k.mouse3;
-		break;
-	case 3:
-		key = Key.k.mouse2;
-		break;
-	default:
-		return;
+	switch (e.which) {
+		case 1:
+			key = Key.k.mouse1;
+			break;
+		case 2:
+			key = Key.k.mouse3;
+			break;
+		case 3:
+			key = Key.k.mouse2;
+			break;
+		default:
+			return;
 	}
 	Key.Event(key, true)
 	e.preventDefault();
 };
 
-Sys.onmouseup = function(e)
-{
+Sys.onmouseup = function (e) {
 	var key;
-	switch (e.which)
-	{
-	case 1:
-		key = Key.k.mouse1;
-		break;
-	case 2:
-		key = Key.k.mouse3;
-		break;
-	case 3:
-		key = Key.k.mouse2;
-		break;
-	default:
-		return;
+	switch (e.which) {
+		case 1:
+			key = Key.k.mouse1;
+			break;
+		case 2:
+			key = Key.k.mouse3;
+			break;
+		case 3:
+			key = Key.k.mouse2;
+			break;
+		default:
+			return;
 	}
 	Key.Event(key)
 	e.preventDefault();
 };
 
-Sys.onmousewheel = function(e)
-{
+Sys.onmousewheel = function (e) {
 	var key = e.wheelDeltaY > 0 ? Key.k.mwheelup : Key.k.mwheeldown;
 	Key.Event(key, true);
 	Key.Event(key);
 	e.preventDefault();
 };
 
-Sys.onunload = function()
-{
+Sys.onunload = function () {
 	Host.Shutdown();
 };
 
-Sys.onwheel = function(e)
-{
+Sys.onwheel = function (e) {
 	var key = e.deltaY < 0 ? Key.k.mwheelup : Key.k.mwheeldown;
 	Key.Event(key, true);
 	Key.Event(key);
