@@ -1,8 +1,8 @@
 WEBS = {};
 
 WEBS.Init = function () {
-	if ((window.WebSocket == null) || (document.location.protocol === 'https:'))
-		return;
+	//if ((window.WebSocket == null) || (document.location.protocol === 'https:'))
+	//	return;
 	WEBS.available = true;
 	return true;
 };
